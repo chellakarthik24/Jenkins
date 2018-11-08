@@ -1,0 +1,45 @@
+import hudson.FilePath
+import jenkins.model.Jenkins
+import hudson.model.Job
+
+def deleteUnusedWorkspace(FilePath root, String path) {
+  root.list().sort{child->child.name}.each { child ->
+    String fullName = path + child.name
+
+    def item = Jenkins.instance.getItemByFullName(fullName);
+    println "Checking '$fullName'"
+
+    try{
+      if (item.class.canonicalName == 'com.cloudbees.hudson.plugins.folder.Folder') {
+        println "-> going deeper into the folder"
+        deleteUnusedWorkspace(root.child(child.name), "$fullName/")
+      } else if (item == null) {
+        // this code is never reached, non-existing projects generate an exception
+        println "Deleting (no such job): '$fullName'"
+        child.deleteRecursive()
+      } else if (item instanceof Job && !item.isBuildable()) {
+        // don't remove the workspace for disabled jobs!
+        //println "Deleting (job disabled): '$fullName'"
+        //child.deleteRecursive()
+      }
+    } catch (Exception exc) {
+      println "   Exception happened: " + exc.message
+      println "   So we delete '" + child + "'!"
+      child.deleteRecursive()
+    }
+  }
+}
+
+println "Beginning of cleanup script."
+
+// loop over possible slaves
+for (node in Jenkins.instance.nodes) {
+  println "Processing $node.displayName"
+  def workspaceRoot = node.rootPath.child("workspace");
+  deleteUnusedWorkspace(workspaceRoot, "")
+}
+
+// do the master itself
+deleteUnusedWorkspace(Jenkins.instance.rootPath.child("workspace"), "")
+
+println "Script has completed."
