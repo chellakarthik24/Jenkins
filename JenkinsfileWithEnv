@@ -1,0 +1,3 @@
+def map = readProperties file:'env.properties'
+def properties = map.collect { key, value -> return key+'='+value }
+withEnv(properties)
