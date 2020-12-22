@@ -1,3 +1,6 @@
 def map = readProperties file:'env.properties'
 def properties = map.collect { key, value -> return key+'='+value }
 withEnv(properties)
+
+
+println "for declarative go to: https://medium.com/@dhamodharakkannan/jenkins-loading-variables-from-a-file-for-different-environments-d442a2a48bce"
