@@ -1,0 +1,27 @@
+import hudson.model.*
+ 
+deleteWorkspace (Hudson.instance.items)
+ 
+def deleteWorkspace (items) {
+  for (item in items) {
+    if (item.class.canonicalName != null
+        && item.class.canonicalName != "com.cloudbees.hudson.plugins.folder.Folder"
+            && item.class.canonicalName != "org.jenkinsci.plugins.workflow.job.WorkflowJob"
+            && item.class.canonicalName != "com.github.mjdetullio.jenkins.plugins.multibranch.MavenMultiBranchProject"
+            && item.class.canonicalName != "org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject"
+            && item.class.canonicalName != "hudson.model.ExternalJob") {
+        println("Item of type "+item.class.canonicalName+" found")
+        if(!item.isBuilding()) {
+            println("Wiping out workspace of job "+item.name)
+            item.doDoWipeOutWorkspace()
+        } else {
+            println("Skipping job "+item.name+", currently building")
+        }
+   } else if (item.class.canonicalName == "com.cloudbees.hudson.plugins.folder.Folder") {
+        println("Item is folder with name "+item.name)
+        deleteWorkspace(((com.cloudbees.hudson.plugins.folder.Folder) item).getItems())
+    } else {
+        println("Item of type "+item.class.canonicalName + " cannot have its workspace cleaned")
+    }
+ }
+}
