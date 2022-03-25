@@ -1,0 +1,6 @@
+def currentDir = new File('E:') 
+currentDir.traverse { File file ->
+  if (file.name.endsWith('settings.xml')) {
+    println file.absolutePath
+  }
+}
